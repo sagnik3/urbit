@@ -7,7 +7,3 @@ urbit is a distributed , key-value store made as a part of my final semester pro
 |----------|--------------------------------------------------------------|
 | **dev**  | **Continous Upgrade Branch where latest changes are added.** |
 
-
-| **main** | **Stable Build for Urbit**                                   |
-|----------|--------------------------------------------------------------|
-| **dev**  | **Continous Upgrade Branch where latest changes are added.** |
