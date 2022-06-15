@@ -4,41 +4,27 @@ import (
 	"flag"
 	"fmt"
 	"log"
-
-	bolt "go.etcd.io/bbolt"
 )
 
 func description() {
 	fmt.Println("urbit v0.0.0.1 : A distributed,key-value store.")
 }
 
-//definign flags for cli usage
+//global flgas for setup for urbit
 
-var (
-	dbLocation = flag.String("db-location", "", "The path to the bolt DB database")
-)
+var dbLocation = flag.String("dbLocation", "", "Path to the Bolt DB database")
+var httpAddress = flag.String("httpAddress", "127.0.0.1:8080", "HTTP host and port")
+var shardConfigFile = flag.String("shardConfigFile", "shardConfig.toml", "File that describes the configuration file for static sharding")
+var shardName = flag.String("shardName", "", "Name of the shard instance for the data")
+var replicaName = flag.String("replicaName", false, "Whether to use only as read-only replica or to write to it also.")
 
-//validate our flags
-/*
-func parseFlags() {
+func parseCLIFlgs() {
 	flag.Parse()
 
 	if *dbLocation == "" {
-		//if empty then not a valid location
-		log.Fatal("ERROR: DB Location Provided is empty, must provide a DB location")
+		log.Fatalf("DB-ERROR: Database Location is not provided.")
 	}
-}
-*/
-func main() {
-	description()
-
-	//	parseFlags()
-	db, err := bolt.Open(*dbLocation, 0666, nil)
-
-	if err != nil {
-		log.Fatal(err)
+	if *shardName == "" {
+		log.Fatalf("SHARD_NAME-ERROR: Shard Name is not provided.")
 	}
-
-	defer db.Close()
-
 }
