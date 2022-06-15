@@ -1,0 +1,6 @@
+[[shards]]
+name = "Location#1"
+idx = 0
+address = "127.0.0.2:8080"
+replicas = ["127.0.0.22:8080"]
+
