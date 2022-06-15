@@ -16,7 +16,7 @@ var dbLocation = flag.String("dbLocation", "", "Path to the Bolt DB database")
 var httpAddress = flag.String("httpAddress", "127.0.0.1:8080", "HTTP host and port")
 var shardConfigFile = flag.String("shardConfigFile", "shardConfig.toml", "File that describes the configuration file for static sharding")
 var shardName = flag.String("shardName", "", "Name of the shard instance for the data")
-var replicaName = flag.String("replicaName", false, "Whether to use only as read-only replica or to write to it also.")
+var replicaName = flag.Bool("replicaName", false, "Whether to use only as read-only replica or to write to it also.")
 
 func parseCLIFlgs() {
 	flag.Parse()
