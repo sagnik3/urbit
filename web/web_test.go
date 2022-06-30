@@ -84,8 +84,8 @@ func TestWebServer(t *testing.T) {
 
 	// Calculated manually and depends on the sharding function.
 	keys := map[string]int{
-		"Soviet": 1,
-		"USA":    0,
+		"User1": 1,
+		"User2": 2,
 	}
 
 	ts1GetHandler = web1.GetHandler
@@ -120,23 +120,23 @@ func TestWebServer(t *testing.T) {
 		log.Printf("Contents of key %q: %s", key, contents)
 	}
 
-	value1, err := db1.GetKey("USA")
+	value1, err := db1.GetKey("User1")
 	if err != nil {
-		t.Fatalf("USA key error: %v", err)
+		t.Fatalf("User1 key error: %v", err)
 	}
 
-	want1 := "value-USA"
+	want1 := "value-User1"
 	if !bytes.Equal(value1, []byte(want1)) {
-		t.Errorf("Unexpected value of USA key: got %q, want %q", value1, want1)
+		t.Errorf("Unexpected value of User1 key: got %q, want %q", value1, want1)
 	}
 
-	value2, err := db2.GetKey("Soviet")
+	value2, err := db2.GetKey("User2")
 	if err != nil {
-		t.Fatalf("Soviet key error: %v", err)
+		t.Fatalf("User2 key error: %v", err)
 	}
 
-	want2 := "value-Soviet"
+	want2 := "value-User2"
 	if !bytes.Equal(value2, []byte(want2)) {
-		t.Errorf("Unexpected value of Soviet key: got %q, want %q", value2, want2)
+		t.Errorf("Unexpected value of User2 key: got %q, want %q", value2, want2)
 	}
 }

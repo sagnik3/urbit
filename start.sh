@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-trap 'killall distribkv' SIGINT
+trap 'killall urbit' SIGINT
 
 cd $(dirname $0)
 
@@ -10,16 +10,16 @@ sleep 0.1
 
 go install -v
 
-urbit -db-location=moscow.db -http-addr=127.0.0.2:8080 -config-file=sharding.toml -shard=Moscow &
-urbit -db-location=moscow-r.db -http-addr=127.0.0.22:8080 -config-file=sharding.toml -shard=Moscow -replica &
+urbit -db-location=db1.db -http-addr=127.0.0.2:8080 -config-file=sharding.toml -shard=DB1 &
+urbit -db-location=db1-r.db -http-addr=127.0.0.22:8080 -config-file=sharding.toml -shard=DB1 -replica &
 
-urbit -db-location=minsk.db -http-addr=127.0.0.3:8080 -config-file=sharding.toml -shard=Minsk &
-urbit -db-location=minsk-r.db -http-addr=127.0.0.33:8080 -config-file=sharding.toml -shard=Minsk -replica &
+urbit -db-location=db2.db -http-addr=127.0.0.3:8080 -config-file=sharding.toml -shard=DB2 &
+urbit -db-location=db2-r.db -http-addr=127.0.0.33:8080 -config-file=sharding.toml -shard=DB2 -replica &
 
-urbit -db-location=kiev.db -http-addr=127.0.0.4:8080 -config-file=sharding.toml -shard=Kiev &
-urbit -db-location=kiev-r.db -http-addr=127.0.0.44:8080 -config-file=sharding.toml -shard=Kiev -replica &
+urbit -db-location=db3.db -http-addr=127.0.0.4:8080 -config-file=sharding.toml -shard=DB3 &
+urbit -db-location=db3-r.db -http-addr=127.0.0.44:8080 -config-file=sharding.toml -shard=DB3 -replica &
 
-urbit -db-location=tashkent.db -http-addr=127.0.0.5:8080 -config-file=sharding.toml -shard=Tashkent &
-urrbit -db-location=tashkent-r.db -http-addr=127.0.0.55:8080 -config-file=sharding.toml -shard=Tashkent -replica &
+urbit -db-location=db4.db -http-addr=127.0.0.5:8080 -config-file=sharding.toml -shard=Tashkent &
+urbit -db-location=db4-r.db -http-addr=127.0.0.55:8080 -config-file=sharding.toml -shard=Tashkent -replica &
 
 wait
