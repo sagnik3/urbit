@@ -1,23 +1,23 @@
 [[shards]]
-name = "Moscow"
+name = "DB1"
 idx = 0
 address = "127.0.0.2:8080"
 replicas = ["127.0.0.22:8080"]
 
 [[shards]]
-name = "Minsk"
+name = "DB2"
 idx = 1
 address = "127.0.0.3:8080"
 replicas = ["127.0.0.33:8080"]
 
 [[shards]]
-name = "Kiev"
+name = "DB3"
 idx = 2
 address = "127.0.0.4:8080"
 replicas = ["127.0.0.44:8080"]
 
 [[shards]]
-name = "Tashkent"
+name = "DB4"
 idx = 3
 address = "127.0.0.5:8080"
 replicas = ["127.0.0.55:8080"]
