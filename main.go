@@ -2,57 +2,70 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
+	"urbit/config"
+	"urbit/db"
+	"urbit/replication"
+	"urbit/web"
 )
 
-func description() {
-	fmt.Println("urbit v0.0.0.1 : A distributed,key-value store.")
-}
+var (
+	dbLocation = flag.String("db-location", "", "The path to the bolt db database")
+	httpAddr   = flag.String("http-addr", "127.0.0.1:8080", "HTTP host and port")
+	configFile = flag.String("config-file", "sharding.toml", "Config file for static sharding")
+	shard      = flag.String("shard", "", "The name of the shard for the data")
+	replica    = flag.Bool("replica", false, "Whether or not run as a read-only replica")
+)
 
-//global flgas for setup for urbit
-
-var dbLocation = flag.String("dbLocation", "", "Path to the Bolt DB database")
-var httpAddress = flag.String("httpAddress", "127.0.0.1:8080", "HTTP host and port")
-var shardConfigFile = flag.String("shardConfigFile", "shardConfig.toml", "File that describes the configuration file for static sharding")
-var shardName = flag.String("shardName", "", "Name of the shard instance for the data")
-var replicaName = flag.Bool("replicaName", false, "Whether to use only as read-only replica or to write to it also.")
-
-func parseCLIFlgs() {
-	/*
-		Parse the required cli flags required for the db location and the shard name
-		required for parsing.
-	*/
+func parseFlags() {
 	flag.Parse()
 
 	if *dbLocation == "" {
-		log.Fatalf("DB-ERROR: Database Location is not provided.")
+		log.Fatalf("Must provide db-location")
 	}
-	if *shardName == "" {
-		log.Fatalf("SHARD_NAME-ERROR: Shard Name is not provided.")
+
+	if *shard == "" {
+		log.Fatalf("Must provide shard")
 	}
 }
 
 func main() {
-	description()
+	parseFlags()
 
-	parseCLIFlgs()
-
-	c, err := urbitconfig.ParseFile(*shardConfigFile)
-
+	c, err := config.ParseFile(*configFile)
 	if err != nil {
-		log.Fatalf("PARSING-ERROR: Error parsing shard config file. %q: %v", *shardConfigFile, err)
+		log.Fatalf("Error parsing config %q: %v", *configFile, err)
 	}
 
-	//adding a web server handle the server
-	server := web.CreateNewServer(newDB, shards)
+	shards, err := config.ParseShards(c.Shards, *shard)
+	if err != nil {
+		log.Fatalf("Error parsing shards config: %v", err)
+	}
 
-	http.HandleFunc("/get", server.GetHandler)
-	http.HandleFunc("/put", server.PutHandler)
-	http.HandleFunc("/delete", server.DeleteHandler)
-	http.HandleFunc("/next-replica-key", server.GetNextReplicationKey)
-	http.HandleFunc("/delete-replica-key", server.DeleteReplicationKey)
+	log.Printf("Shard count is %d, current shard: %d", shards.Count, shards.CurIdx)
 
-	log.Fatal(http.ListenAndServe(*httpAddress, nil))
+	db, close, err := db.NewDatabase(*dbLocation, *replica)
+	if err != nil {
+		log.Fatalf("Error creating %q: %v", *dbLocation, err)
+	}
+	defer close()
+
+	if *replica {
+		leaderAddr, ok := shards.Addrs[shards.CurIdx]
+		if !ok {
+			log.Fatalf("Could not find address for leader for shard %d", shards.CurIdx)
+		}
+		go replication.ClientLoop(db, leaderAddr)
+	}
+
+	srv := web.NewServer(db, shards)
+
+	http.HandleFunc("/get", srv.GetHandler)
+	http.HandleFunc("/set", srv.SetHandler)
+	http.HandleFunc("/purge", srv.DeleteExtraKeysHandler)
+	http.HandleFunc("/next-replication-key", srv.GetNextKeyForReplication)
+	http.HandleFunc("/delete-replication-key", srv.DeleteReplicationKey)
+
+	log.Fatal(http.ListenAndServe(*httpAddr, nil))
 }

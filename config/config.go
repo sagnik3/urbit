@@ -7,69 +7,74 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-/*
-	Shard struct describes the structure which holds appropriate set of keys
-	Each shard instance will have a unique set of keys
-*/
+// Shard describes a shard that holds the appropriate set of keys.
+// Each shard has unique set of keys.
 type Shard struct {
-	ShardName    string
-	ShardIdx     int
-	ShardAddress string
+	Name    string
+	Idx     int
+	Address string
 }
 
-// config for shrading config
+// Config describes the sharding config.
 type Config struct {
 	Shards []Shard
 }
 
-/*
-
-Shards are reprsentingg an easier-to-represent of sharding config:
-the shards will count. current index and the addresses of all other shards too
-*/
-
-type Shards struct {
-	Count      int
-	CurrentIdx int
-	Addrs      map[int]string
-}
-
-//parse file will parse the file and will return it upon success
-
+// ParseFile parses the config and returns it upon success.
 func ParseFile(filename string) (Config, error) {
-	var conf Config
-	_, err := toml.DecodeFile(filename, &conf)
-	if err != nil {
+	var c Config
+	if _, err := toml.DecodeFile(filename, &c); err != nil {
 		return Config{}, err
 	}
-	return conf, nil
+	return c, nil
 }
 
-//parseShards will convert and verify the list of the shards specified in the config
-// into a form that can be used to route the files
+// Shards represents an easier-to-use representation of
+// the sharding config: the shards count, current index and
+// the addresses of all other shards too.
+type Shards struct {
+	Count  int
+	CurIdx int
+	Addrs  map[int]string
+}
 
-func ParseShards(shards []Shard, currentShardName string) (*Shards, error) {
+// ParseShards converts and verifies the list of shards
+// specified in the config into a form that can be used
+// for routing.
+func ParseShards(shards []Shard, curShardName string) (*Shards, error) {
 	shardCount := len(shards)
-	shardIndex := -1
+	shardIdx := -1
 	addrs := make(map[int]string)
 
 	for _, s := range shards {
-		_, locErr := addrs[s.CurrentIdx]
-		if locErr != nil {
-			return nil, fmt.Errorf("Duplicate of the Shard Index: %d", s.ShardIdx)
+		if _, ok := addrs[s.Idx]; ok {
+			return nil, fmt.Errorf("duplicate shard index: %d", s.Idx)
 		}
 
-		addrs[s.CurrentIdx] = s.Address
+		addrs[s.Idx] = s.Address
+		if s.Name == curShardName {
+			shardIdx = s.Idx
+		}
 	}
+
+	for i := 0; i < shardCount; i++ {
+		if _, ok := addrs[i]; !ok {
+			return nil, fmt.Errorf("shard %d is not found", i)
+		}
+	}
+
+	if shardIdx < 0 {
+		return nil, fmt.Errorf("shard %q was not found", curShardName)
+	}
+
 	return &Shards{
-		Addrs:      addrs,
-		Count:      shardCount,
-		CurrentIdx: shardIndex,
+		Addrs:  addrs,
+		Count:  shardCount,
+		CurIdx: shardIdx,
 	}, nil
 }
 
-//Index will returns the shard number for the corresponding key
-
+// Index returns the shard number for the corresponding key.
 func (s *Shards) Index(key string) int {
 	h := fnv.New64()
 	h.Write([]byte(key))
